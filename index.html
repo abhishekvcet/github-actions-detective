@@ -1,254 +1,188 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>GitHub Actions Log Extractor</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background": "#101419",
+                        "surface": "#101419",
+                        "surface-container-lowest": "#0a0e14",
+                        "surface-container-low": "#181c21",
+                        "surface-container": "#1c2025",
+                        "surface-container-high": "#262a30",
+                        "surface-container-highest": "#31353b",
+                        "outline": "#83948f",
+                        "outline-variant": "#2a3438",
+                        "primary": "#d7fff3",
+                        "primary-container": "#00f5d4",
+                        "on-primary": "#00382f",
+                        "secondary": "#4cd7f6",
+                        "on-secondary": "#003640",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-surface": "#e0e2ea",
+                        "on-surface-variant": "#b9cac4"
+                    },
+                    fontFamily: {
+                        sans: ["Geist", "system-ui", "sans-serif"],
+                        heading: ["Space Grotesk", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --error: #ef4444;
+        /* Custom scrollbar styling for terminal containers */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 2rem;
-            line-height: 1.5;
+        ::-webkit-scrollbar-track {
+            background: #0a0e14;
         }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
+        ::-webkit-scrollbar-thumb {
+            background: #262a30;
+            border-radius: 3px;
         }
-
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(to right, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-        }
-
-        p {
-            color: var(--text-muted);
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 2rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            margin-bottom: 2rem;
-        }
-
-        .form-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .input-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
-        }
-
-        input:focus {
-            border-color: var(--primary);
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            width: 100%;
-            margin-top: 1rem;
-        }
-
-        button:hover {
-            background: var(--primary-hover);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .loader {
-            display: none;
-            text-align: center;
-            margin: 2rem 0;
-            color: var(--primary);
-        }
-
-        .error-message {
-            display: none;
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--error);
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            margin-bottom: 1.5rem;
-        }
-
-        .log-entry {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            overflow: hidden;
-        }
-
-        .log-header {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .log-title {
-            font-weight: 600;
-        }
-
-        .badge {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--error);
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .log-content {
-            padding: 1rem;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 0.875rem;
-            white-space: pre-wrap;
-            overflow-x: auto;
-            max-height: 500px;
-            overflow-y: auto;
-            color: #e2e8f0;
-        }
-
-        #results {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #31353b;
         }
     </style>
 </head>
-
-<body>
-    <div class="container">
-        <header>
-            <h1>GitHub Actions Logs</h1>
-            <p>Extract and inspect failed workflow logs instantly</p>
-        </header>
-
-        <div class="card">
-            <div class="error-message" id="errorMessage"></div>
-
-            <form id="fetchForm">
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <div class="input-group" style="flex: 100%;">
-                        <label for="repoSelect">Select Repository (Auto-fetched)</label>
-                        <select id="repoSelect" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1rem; outline: none; margin-bottom: 1rem;">
-                            <option value="">Loading repositories...</option>
-                        </select>
+<body class="bg-[#101419] text-[#e0e2ea] font-sans antialiased h-screen w-screen overflow-hidden m-0 p-0 selection:bg-[#00f5d4]/20 selection:text-[#00f5d4]">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- LEFT SIDEBAR: Controls & Extraction Parameters -->
+        <aside class="w-[400px] shrink-0 h-screen bg-[#0a0e14] border-r border-[#262a30] flex flex-col justify-between p-6 overflow-y-auto">
+            <div class="flex flex-col gap-6">
+                <!-- Header -->
+                <header class="text-left border-b border-[#262a30]/80 pb-5">
+                    <div class="inline-flex items-center gap-2 mb-2.5">
+                        <div class="w-8 h-8 rounded-md bg-[#00f5d4]/10 border border-[#00f5d4]/30 flex items-center justify-center text-[#00f5d4]">
+                            <span class="material-symbols-outlined text-[19px]">terminal</span>
+                        </div>
+                        <span class="font-mono text-[11px] font-semibold tracking-wider uppercase text-[#00f5d4]">CI/CD Diagnostics</span>
+                    </div>
+                    <h1 class="font-heading text-2xl font-bold tracking-tight text-white m-0">GitHub Actions Logs</h1>
+                    <p class="text-xs text-[#83948f] mt-1.5 leading-relaxed">Extract and inspect failed workflow logs instantly</p>
+                </header>
+                
+                <!-- Error Container -->
+                <div class="error-message hidden bg-[#93000a]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs p-3 rounded font-mono leading-relaxed" id="errorMessage">
+                </div>
+                
+                <!-- Query Form -->
+                <form class="flex flex-col gap-4" id="fetchForm">
+                    <!-- Repository Select -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="flex items-center justify-between text-xs font-mono font-medium text-[#b9cac4]" for="repoSelect">
+                            <span>Select Repository (Auto-fetched)</span>
+                            <span class="text-[10px] text-[#83948f] flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#00f5d4] inline-block animate-pulse"></span> Live
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <select class="w-full bg-[#181c21] border border-[#262a30] rounded px-3 py-2 text-xs font-mono text-[#e0e2ea] appearance-none focus:outline-none focus:border-[#00f5d4] transition-colors pr-8 cursor-pointer" id="repoSelect">
+                                <option value="">Loading repositories...</option>
+                            </select>
+                            <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#83948f] text-[18px]">expand_more</span>
+                        </div>
+                    </div>
+                    <!-- Owner & Repo Inputs -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-mono font-medium text-[#b9cac4]" for="owner">Repository Owner</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[14px] text-[#83948f]">account_circle</span>
+                                <input class="w-full bg-[#181c21] border border-[#262a30] rounded pl-8 pr-2.5 py-2 text-xs font-mono text-[#e0e2ea] focus:outline-none focus:border-[#00f5d4] transition-colors" id="owner" placeholder="e.g., torvalds" required="" type="text" value=""/>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-mono font-medium text-[#b9cac4]" for="repo">Repository Name</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[14px] text-[#83948f]">deployed_code</span>
+                                <input class="w-full bg-[#181c21] border border-[#262a30] rounded pl-8 pr-2.5 py-2 text-xs font-mono text-[#e0e2ea] focus:outline-none focus:border-[#00f5d4] transition-colors" id="repo" placeholder="e.g., linux" required="" type="text" value=""/>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Run Limit -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="flex justify-between items-center text-xs font-mono font-medium text-[#b9cac4]" for="limit">
+                            <span>Limit (Runs)</span>
+                            <span class="text-[10px] text-[#83948f]">Max 20 runs</span>
+                        </label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[15px] text-[#83948f]">filter_list</span>
+                            <input class="w-full bg-[#181c21] border border-[#262a30] rounded pl-8 pr-2.5 py-2 text-xs font-mono text-[#e0e2ea] focus:outline-none focus:border-[#00f5d4] transition-colors" id="limit" max="20" min="1" required="" type="number" value="5"/>
+                        </div>
+                    </div>
+                    <!-- Fetch Button -->
+                    <button class="mt-2 w-full bg-[#00f5d4] hover:bg-[#26fedc] text-[#00382f] font-mono font-semibold text-xs py-2.5 px-4 rounded transition-all duration-150 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,245,212,0.2)] active:scale-[0.99] cursor-pointer" id="submitBtn" type="submit">
+                        <span class="material-symbols-outlined text-[16px]">sync</span>
+                        <span>Fetch Failed Logs</span>
+                    </button>
+                </form>
+                
+                <!-- Loader Indicator -->
+                <div class="loader hidden flex-col items-center justify-center py-4 text-[#00f5d4] text-xs font-mono gap-2 bg-[#181c21]/50 border border-[#262a30] rounded" id="loader">
+                    <svg class="animate-spin h-5 w-5 text-[#00f5d4]" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path>
+                    </svg>
+                    <span>Fetching logs...</span>
+                </div>
+            </div>
+            
+            <!-- Sidebar Footer / Metadata -->
+            <div class="pt-4 border-t border-[#262a30] flex flex-col gap-2">
+                <div class="flex items-center justify-between text-[11px] font-mono text-[#83948f]">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        GitHub REST API v3
+                    </span>
+                    <span class="text-[#00f5d4]">v1.4.2-ci</span>
+                </div>
+                <div class="text-[10px] text-[#83948f]/70 font-mono leading-tight">
+                    Filtered exclusively for status: <code class="text-rose-400 font-semibold">failure</code> runs.
+                </div>
+            </div>
+        </aside>
+        
+        <!-- RIGHT PANEL: Header + Scrollable Log Stream -->
+        <main class="flex-1 h-screen flex flex-col overflow-hidden bg-[#101419]">
+            <!-- Top Bar / Active Target Header -->
+            <div class="h-14 shrink-0 px-6 border-b border-[#262a30] flex items-center justify-between bg-[#101419]/90 backdrop-blur z-10">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 text-xs font-mono text-[#83948f]">
+                        <span class="material-symbols-outlined text-[16px] text-[#4cd7f6]">folder_open</span>
+                        <span class="text-white font-medium" id="active-repo-name">None Selected</span>
+                    </div>
+                    <span class="text-[#83948f] text-xs">/</span>
+                    <div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#93000a]/20 border border-[#ffb4ab]/20 text-[11px] font-mono text-[#ffb4ab]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                        <span>Failed Workflow Runs</span>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="input-group">
-                        <label for="owner">Repository Owner</label>
-                        <input type="text" id="owner" placeholder="e.g., torvalds" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="repo">Repository Name</label>
-                        <input type="text" id="repo" placeholder="e.g., linux" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="limit">Limit (Runs)</label>
-                        <input type="number" id="limit" value="5" min="1" max="20" required>
-                    </div>
+            </div>
+            
+            <!-- Results Stream (Independent Scroll Container) -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="results">
+                <div class="flex items-center justify-center h-full text-[#83948f] font-mono text-sm">
+                    Select a repository to view failed logs.
                 </div>
-                <button type="submit" id="submitBtn">Fetch Failed Logs</button>
-            </form>
-        </div>
-
-        <div class="loader" id="loader">
-            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                <style>
-                    .spinner_P7sC {
-                        transform-origin: center;
-                        animation: spinner_svv2 .75s infinite linear
-                    }
-
-                    @keyframes spinner_svv2 {
-                        100% {
-                            transform: rotate(360deg)
-                        }
-                    }
-                </style>
-                <path
-                    d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
-                    class="spinner_P7sC" />
-            </svg>
-            Fetching logs...
-        </div>
-
-        <div id="results"></div>
+            </div>
+        </main>
     </div>
 
+    <!-- Application Script -->
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const repoSelect = document.getElementById('repoSelect');
@@ -291,40 +225,43 @@
 
         document.getElementById('fetchForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
+            
             const owner = document.getElementById('owner').value;
             const repo = document.getElementById('repo').value;
             const limit = document.getElementById('limit').value;
-
+            
             const btn = document.getElementById('submitBtn');
             const loader = document.getElementById('loader');
             const results = document.getElementById('results');
             const errorMsg = document.getElementById('errorMessage');
-
+            
             btn.disabled = true;
-            loader.style.display = 'block';
+            btn.style.opacity = '0.7';
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
             results.innerHTML = '';
-            errorMsg.style.display = 'none';
+            errorMsg.classList.add('hidden');
+
+            document.getElementById('active-repo-name').textContent = owner && repo ? `${owner} / ${repo}` : 'None Selected';
 
             try {
                 const response = await fetch(`/logs/${owner}/${repo}/failed?limit=${limit}`);
-
+                
                 if (!response.ok) {
                     const data = await response.json();
                     throw new Error(data.detail || 'Failed to fetch logs');
                 }
-
+                
                 const data = await response.json();
-
+                
                 if (data.message) {
-                    results.innerHTML = `<div class="card"><p style="text-align: center;">${data.message}</p></div>`;
+                    results.innerHTML = `<div class="p-6 text-center text-[#83948f]">${data.message}</div>`;
                 } else if (data.extracted_logs && data.extracted_logs.length > 0) {
                     data.extracted_logs.forEach(log => {
                         const div = document.createElement('div');
-                        div.className = 'log-entry';
-
-                        // Escape HTML in logs to prevent XSS and formatting issues
-                        const escapeHTML = str => str.replace(/[&<>'"]/g,
+                        div.className = 'log-entry bg-[#0a0e14] border border-[#262a30] rounded-md overflow-hidden shadow-lg hover:border-[#31353b] transition-colors';
+                        
+                        const escapeHTML = str => str.replace(/[&<>'"]/g, 
                             tag => ({
                                 '&': '&amp;',
                                 '<': '&lt;',
@@ -333,28 +270,35 @@
                                 '"': '&quot;'
                             }[tag] || tag)
                         );
-
+                        
                         div.innerHTML = `
-                            <div class="log-header">
-                                <div class="log-title">${escapeHTML(log.run_name)} / ${escapeHTML(log.job_name)}</div>
-                                <div class="badge">Failed</div>
+                            <div class="log-header bg-[#181c21] px-4 py-3 border-b border-[#262a30] flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="material-symbols-outlined text-rose-400 text-[18px]">cancel</span>
+                                    <span class="log-title font-mono font-medium text-xs text-white">${escapeHTML(log.run_name)} / ${escapeHTML(log.job_name)}</span>
+                                    <span class="text-[11px] font-mono text-[#83948f]">• run #${log.run_id}</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="badge bg-[#93000a]/25 text-[#ffb4ab] border border-[#ffb4ab]/30 px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider">Failed</span>
+                                </div>
                             </div>
-                            <div class="log-content">${escapeHTML(log.logs || 'No log content available.')}</div>
+                            <pre class="log-content font-mono text-[12px] leading-relaxed p-4 bg-[#0a0e14] text-[#b9cac4] overflow-x-auto m-0 selection:bg-[#93000a]/30">${escapeHTML(log.logs || 'No log content available.')}</pre>
                         `;
                         results.appendChild(div);
                     });
                 } else {
-                    results.innerHTML = `<div class="card"><p style="text-align: center;">No failed logs found.</p></div>`;
+                    results.innerHTML = `<div class="p-6 text-center text-[#83948f]">No failed logs found.</div>`;
                 }
             } catch (err) {
                 errorMsg.textContent = err.message;
-                errorMsg.style.display = 'block';
+                errorMsg.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                loader.style.display = 'none';
+                btn.style.opacity = '1';
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
             }
         });
     </script>
 </body>
-
 </html>
