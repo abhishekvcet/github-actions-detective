@@ -279,6 +279,11 @@
                                     <span class="text-[11px] font-mono text-[#83948f]">• run #${log.run_id}</span>
                                 </div>
                                 <div class="flex items-center gap-3">
+                                    <button class="copy-btn flex items-center justify-center w-6 h-6 rounded bg-[#262a30] hover:bg-[#31353b] text-[#83948f] hover:text-white transition-all cursor-pointer border border-transparent hover:border-[#83948f]/30" 
+                                            onclick="navigator.clipboard.writeText(this.parentElement.parentElement.nextElementSibling.innerText).then(() => { const icon = this.querySelector('span'); icon.textContent = 'check'; icon.classList.add('text-emerald-400'); setTimeout(() => { icon.textContent = 'content_copy'; icon.classList.remove('text-emerald-400'); }, 2000); })" 
+                                            title="Copy to clipboard">
+                                        <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                                    </button>
                                     <span class="badge bg-[#93000a]/25 text-[#ffb4ab] border border-[#ffb4ab]/30 px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider">Failed</span>
                                 </div>
                             </div>
