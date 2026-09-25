@@ -75,9 +75,9 @@ async def get_failed_logs(
     headers = await get_github_headers(github_token)
     
     async with httpx.AsyncClient() as client:
-        # 1. Fetch recent failed workflow runs
+        # 1. Fetch recent workflow runs (no status filter so we can check if it's fixed)
         runs_url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/actions/runs"
-        params = {"status": "failure", "per_page": limit}
+        params = {"per_page": 50}
         
         runs_response = await client.get(runs_url, headers=headers, params=params)
         
@@ -88,10 +88,26 @@ async def get_failed_logs(
             )
             
         runs_data = runs_response.json()
-        failed_runs = runs_data.get("workflow_runs", [])
+        all_runs = runs_data.get("workflow_runs", [])
+        
+        # Track the latest run for each workflow to see if it's currently failing
+        latest_workflow_runs = {}
+        for run in all_runs:
+            w_id = run["workflow_id"]
+            if w_id not in latest_workflow_runs:
+                latest_workflow_runs[w_id] = run
+                
+        # Filter down to workflows where the *latest* run is a failure
+        currently_failing_runs = [
+            run for run in latest_workflow_runs.values() 
+            if run.get("conclusion") == "failure"
+        ]
+        
+        # Limit the results
+        failed_runs = currently_failing_runs[:limit]
         
         if not failed_runs:
-            return {"message": "No failed workflow runs found."}
+            return {"message": "All workflows are currently passing! No unresolved failures found. 🎉"}
             
         results = []
         
