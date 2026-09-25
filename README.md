@@ -45,9 +45,18 @@ Open the `.env` file and paste in your GitHub Personal Access Token (PAT).
 *Note: Your PAT needs `repo` scopes to read workflow runs from private repositories.*
 
 ### 5. Run the application
+
+**Option A: Using Python directly**
 Start the FastAPI development server using Uvicorn:
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+```
+
+**Option B: Using Docker 🐳**
+Build and run the container:
+```bash
+docker build -t github-actions-detective .
+docker run -p 8001:8001 --env-file .env github-actions-detective
 ```
 
 ### 6. Usage
