@@ -24,32 +24,35 @@ async def get_user_repos():
         
     headers = await get_github_headers(github_token)
     
-    async with httpx.AsyncClient() as client:
-        # Fetch repos for the authenticated user, sorted by most recently updated
-        repos_url = f"{GITHUB_API_URL}/user/repos"
-        params = {"sort": "updated", "per_page": 100}
-        
-        response = await client.get(repos_url, headers=headers, params=params)
-        
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=response.status_code, 
-                detail=f"Failed to fetch repositories: {response.text}"
-            )
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Fetch repos for the authenticated user, sorted by most recently updated
+            repos_url = f"{GITHUB_API_URL}/user/repos"
+            params = {"sort": "updated", "per_page": 100}
             
-        repos_data = response.json()
-        
-        # Return a simplified list of repositories
-        repos = [
-            {
-                "full_name": repo["full_name"],
-                "owner": repo["owner"]["login"],
-                "name": repo["name"]
-            }
-            for repo in repos_data
-        ]
-        
-        return {"repos": repos}
+            response = await client.get(repos_url, headers=headers, params=params)
+            
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code, 
+                    detail=f"Failed to fetch repositories: {response.text}"
+                )
+                
+            repos_data = response.json()
+            
+            # Return a simplified list of repositories
+            repos = [
+                {
+                    "full_name": repo["full_name"],
+                    "owner": repo["owner"]["login"],
+                    "name": repo["name"]
+                }
+                for repo in repos_data
+            ]
+            
+            return {"repos": repos}
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=503, detail=f"Network error while connecting to GitHub: {str(exc)}")
 
 async def get_github_headers(token: str) -> Dict[str, str]:
     return {
@@ -74,12 +77,13 @@ async def get_failed_logs(
         
     headers = await get_github_headers(github_token)
     
-    async with httpx.AsyncClient() as client:
-        # 1. Fetch recent workflow runs (no status filter so we can check if it's fixed)
-        runs_url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/actions/runs"
-        params = {"per_page": 50}
-        
-        runs_response = await client.get(runs_url, headers=headers, params=params)
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # 1. Fetch recent workflow runs (no status filter so we can check if it's fixed)
+            runs_url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/actions/runs"
+            params = {"per_page": 50}
+            
+            runs_response = await client.get(runs_url, headers=headers, params=params)
         
         if runs_response.status_code != 200:
             raise HTTPException(
@@ -150,6 +154,8 @@ async def get_failed_logs(
                 })
                 
         return {"extracted_logs": results}
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=503, detail=f"Network error while connecting to GitHub: {str(exc)}")
 
 if __name__ == "__main__":
     import uvicorn
